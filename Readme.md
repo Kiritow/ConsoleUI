@@ -22,3 +22,8 @@
 0 由对应的Frame进行资源释放(delete)  
 1 Frame不进行资源释放
 
+### Frame  
+`virtual void setPage(Page*)` 设置首页  
+`virtual void getPage()` 获取首页  
+`virtual void run()` 启动程序  
+`virtual void jumpTo()` 由其他控件调用,设置跳转的下一页面  
