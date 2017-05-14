@@ -70,6 +70,8 @@ inline int _ConsoleColor2winForeColor(ConsoleColor conColor)
         return FOREGROUND_RED | FOREGROUND_GREEN;
     case ConsoleColor::white:
         return FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
+    default:
+        return 0;
     }
 }
 
@@ -100,7 +102,7 @@ inline int _ConsoleColor2winBackColor(ConsoleColor conColor)
 
 inline void cprint(ConsoleColor FrontColor,ConsoleColor BackColor)
 {
-    int iFront=_ConsoleColor2winBackColor(FrontColor);
+    int iFront=_ConsoleColor2winForeColor(FrontColor);
     int iBack=_ConsoleColor2winBackColor(BackColor);
     if(iFront!=0) iFront=iFront | FOREGROUND_INTENSITY;
     if(iBack!=0) iBack=iBack| BACKGROUND_INTENSITY;
@@ -296,6 +298,7 @@ ColorPage::~ColorPage()
 
 void ColorPage::add(ColorSelection* p)
 {
+    p->setFrame(getFrame());
     _vec.push_back(p);
 }
 
@@ -312,12 +315,41 @@ int ColorPage::del(ColorSelection* p)
     {
         /// Current Activated Selection is to be deleted.
         _curActive=0;
+
+        /// Delete Selection
+        if((*iter)->onDelete()==0)
+        {
+            (*iter)->setFrame(nullptr);
+            delete (*iter);
+        }
+        else
+        {
+            (*iter)->setFrame(nullptr);
+        }
+
+        /// Delete From Record.
         _vec.erase(iter);
     }
     else
     {
+        /// Get current activated selection.
         ColorSelection* _curActive_ptr=_vec.at(_curActive-1);
+
+        /// Delete Target Selection
+        if((*iter)->onDelete()==0)
+        {
+            (*iter)->setFrame(nullptr);
+            delete (*iter);
+        }
+        else
+        {
+            (*iter)->setFrame(nullptr);
+        }
+
+        /// Delete Target From Record.
         _vec.erase(iter);
+
+        /// Re-Calculate active id.
         _curActive=std::find(_vec.begin(),_vec.end(),_curActive_ptr)-_vec.begin()+1;
     }
 
@@ -343,6 +375,10 @@ ColorFrame* ColorPage::getFrame()
 void ColorPage::setFrame(ColorFrame* pFrame)
 {
     _pframe=pFrame;
+    for(auto& ptr:_vec)
+    {
+        ptr->setFrame(getFrame());
+    }
 }
 
 //virtual
@@ -451,11 +487,17 @@ ColorFrame::ColorFrame()
     _has_started=false;
 }
 
+ColorFrame::~ColorFrame()
+{
+
+}
+
 void ColorFrame::setHomePage(ColorPage* pPage,bool deleteOnRemove)
 {
     if(_has_started) return;
     _home_page=pPage;
     _delete_home_page_on_dtor=deleteOnRemove;
+    pPage->setFrame(this);
 }
 
 ColorPage* ColorFrame::getHomePage()
@@ -511,6 +553,7 @@ void ColorFrame::run()
         if(_cur_page->getSelectionSize()>0)
         {
             cid=_cur_page->getCurrentActive();
+            int oldcid=cid;
             if(_cns::GetAction(cid,1,_cur_page->getSelectionSize(),_cur_page->getSelectionSize()))
             {
                 /// Confirmed Key Pressed.
@@ -528,6 +571,7 @@ void ColorFrame::run()
                             /// Load New Page
                             _cur_page=_next_page;
                             _next_page=nullptr;
+                            _cur_page->setFrame(this);
                             _cur_page->onLoad();
                         }
                         else
@@ -541,7 +585,12 @@ void ColorFrame::run()
                         /// Unload Current Page
                         if(_cur_page->onUnload()==0)
                         {
+                            _cur_page->setFrame(nullptr);
                             delete _cur_page;
+                        }
+                        else
+                        {
+                            _cur_page->setFrame(nullptr);
                         }
                         _cur_page=nullptr;
 
@@ -567,15 +616,23 @@ void ColorFrame::run()
             else
             {
                 /// If not confirmed , just go ahead.
+                if(oldcid!=cid)
+                {
+                    _cur_page->onSelectionOver(cid);
+                }
             }
         }
         else
         {
-            /// No Selection on this page
             /// Unload Current Page
             if(_cur_page->onUnload()==0)
             {
+                _cur_page->setFrame(nullptr);
                 delete _cur_page;
+            }
+            else
+            {
+                _cur_page->setFrame(nullptr);
             }
             _cur_page=nullptr;
 
@@ -597,7 +654,12 @@ void ColorFrame::run()
     {
         if(_cur_page->onUnload()==0)
         {
+            _cur_page->setFrame(nullptr);
             delete _cur_page;
+        }
+        else
+        {
+            _cur_page->setFrame(nullptr);
         }
         _cur_page=nullptr;
     }
@@ -607,7 +669,12 @@ void ColorFrame::run()
         _cur_page->onForeground();
         if(_cur_page->onUnload()==0)
         {
+            _cur_page->setFrame(nullptr);
             delete _cur_page;
+        }
+        else
+        {
+            _cur_page->setFrame(nullptr);
         }
     }
     _cur_page=nullptr;
