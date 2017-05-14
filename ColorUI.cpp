@@ -100,12 +100,15 @@ inline int _ConsoleColor2winBackColor(ConsoleColor conColor)
     }
 }
 
-inline void cprint(ConsoleColor FrontColor,ConsoleColor BackColor)
+inline void cprint(ConsoleColor FrontColor,ConsoleColor BackColor,bool withIntensity=true)
 {
     int iFront=_ConsoleColor2winForeColor(FrontColor);
     int iBack=_ConsoleColor2winBackColor(BackColor);
-    if(iFront!=0) iFront=iFront | FOREGROUND_INTENSITY;
-    if(iBack!=0) iBack=iBack| BACKGROUND_INTENSITY;
+    if(withIntensity)
+    {
+        if(iFront!=0) iFront=iFront | FOREGROUND_INTENSITY;
+        if(iBack!=0) iBack=iBack| BACKGROUND_INTENSITY;
+    }
     SetConsoleTextAttribute(_auto_init_console_info_obj.hout,iFront | iBack );
 }
 
@@ -391,7 +394,7 @@ void ColorPage::draw()
     }
     if(!text.empty())
     {
-        _cns::cprint(textFrontColor,textBackColor);
+        _cns::cprint(textFrontColor,textBackColor,false);
         printf("%s\n",text.c_str());
     }
     if(!_curActive) // _curActive==0
