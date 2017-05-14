@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include <list>
+#include <vector>
 #include <stack>
 
 enum class ConsoleColor { black=0,red=1,green=2,yellow=3,blue=4,purple=5,lightblue=6,deepgreen=6,white=7 };
@@ -21,8 +21,8 @@ public:
     virtual void drawInfo();
     bool hasInfo();
 
-    void onActivate();
-    void onDeActivate();
+    virtual void onActivate();
+    virtual void onDeActivate();
 
     ColorFrame* getFrame();
     void setFrame(ColorFrame*);
@@ -31,6 +31,9 @@ public:
     /// return 1 to return last page.(If no page to return, exit the program)
     /// return 0 to continue running.(If you want to change page, you should return 0) (default)
     virtual int onClick();
+
+    /// return 0 tells the frame to delete this selection. (default)
+    virtual int onDelete();
 private:
     bool _is_active;
     ColorFrame* _pframe;
@@ -46,11 +49,12 @@ public:
     virtual ~ColorPage();
 
     /// Add and delete ColorSelections.
-    void add(ColorSelection* p);
-    int del(ColorSelection* p);
+    void add(ColorSelection*);
+    int del(ColorSelection*);
 
     /// Called by ColorFrame (mostly). Let Frame know how many selections have been added.
-    int getSelectionSize();
+    int getSelectionSize() const;
+    int getCurrentActive() const;
 
     ColorFrame* getFrame();
     void setFrame(ColorFrame*);
@@ -69,16 +73,16 @@ public:
 
     /// Called when a selection is selected or unselected.
     virtual void onSelectionOver(int id);
-    virtual void onSelectionOut(int id);
 
     /// Returns ColorSelection::onClick()
     virtual int onActive(int id);
 protected:
     /// Get internal selection list, for derived class use.
-    std::list<ColorSelection*>& _getlst();
+    std::vector<ColorSelection*>& _getvec();
 private:
-    std::list<ColorSelection*> _lst;
+    std::vector<ColorSelection*> _vec;
     int _curActive;
+    ColorFrame* _pframe;
 };
 
 class ColorFrame
@@ -87,8 +91,9 @@ public:
     ColorFrame();
     ~ColorFrame();
 
-    void setHomePage(ColorPage*);
     ColorPage* getHomePage();
+    /// Home Page Can ONLY be set before run.
+    void setHomePage(ColorPage*,bool deleteOnRemove=true);
 
     void run();
 
@@ -101,11 +106,16 @@ public:
     void enterInputMode();
     void exitInputMode();
 
+    /// [ONLY FOR EXPERIMENTAL USE]
+    void clearScreen();
+    void clearInput();
 
 private:
     ColorPage* _home_page;
     ColorPage* _cur_page;
     ColorPage* _next_page;
+    bool _delete_home_page_on_dtor;
+    bool _has_started;
     std::stack<ColorPage*> _stk;
 };
 
@@ -114,4 +124,6 @@ class ColorInputModeGuard
 public:
     ColorInputModeGuard(ColorFrame* f);
     ~ColorInputModeGuard();
+private:
+    ColorFrame* _pframe;
 };
