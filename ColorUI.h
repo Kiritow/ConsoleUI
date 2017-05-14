@@ -1,7 +1,12 @@
 #pragma once
 #include <string>
+#include <list>
+#include <stack>
 
 enum class ConsoleColor { black=0,red=1,green=2,yellow=3,blue=4,purple=5,lightblue=6,deepgreen=6,white=7 };
+
+/// Fwd DECL
+class ColorFrame;
 
 class ColorSelection
 {
