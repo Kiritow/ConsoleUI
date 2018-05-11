@@ -15,15 +15,15 @@ struct termios _old, _new;
 void initTermios(int echo)
 {
 	tcgetattr(0, &_old); /* grab old terminal i/o settings */
-	new = old; /* make new settings same as old settings */
-	new.c_lflag &= ~ICANON; /* disable buffered i/o */
-	new.c_lflag &= echo ? ECHO : ~ECHO; /* set echo mode */
+	_new = _old; /* make new settings same as old settings */
+	_new.c_lflag &= ~ICANON; /* disable buffered i/o */
+	_new.c_lflag &= echo ? ECHO : ~ECHO; /* set echo mode */
 	tcsetattr(0, TCSANOW, &_new); /* use these new terminal i/o settings now */
 }
 /* Restore old terminal i/o settings */
 void resetTermios(void)
 {
-	tcsetattr(0, TCSANOW, &old);
+	tcsetattr(0, TCSANOW, &_old);
 }
 /* Read 1 character - echo defines echo mode */
 char getch_(int echo)
@@ -48,6 +48,15 @@ char getche(void)
 
 namespace _cns
 {
+/// Stop endless compile error
+static int _key_min(int a,int b)
+{
+	return a<b?a:b;
+}
+static int _key_max(int a,int b)
+{
+	return a<b?b:a;
+}
 #ifdef _WIN32 /// Windows Platform
 	class _auto_init_console_info_class
 	{
@@ -229,12 +238,12 @@ namespace _cns
 		{
 		case KEY::UP:
 		{
-			cid = max(min(cid - 1, MaxVal), MinVal);
+			cid = _key_max(_key_min(cid - 1, MaxVal), MinVal);
 			return 0;
 		}
 		case KEY::DOWN:
 		{
-			cid = max(min(cid + 1, MaxVal), MinVal);
+			cid = _key_max(_key_min(cid + 1, MaxVal), MinVal);
 			return 0;
 		}
 		case KEY::ESC:
@@ -575,7 +584,11 @@ void ColorFrame::jumpTo(ColorPage* nextPage)
 void ColorFrame::clearScreen()
 {
 	_cns::cprint();
+#ifdef _WIN32
 	system("cls");
+#else
+	system("clear");
+#endif
 }
 
 void ColorFrame::clearInput()
