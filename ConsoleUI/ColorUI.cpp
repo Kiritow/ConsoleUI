@@ -1,7 +1,7 @@
 #include "ColorUI.h"
+#include <Windows.h>
 #include <algorithm>
-#include <windows.h>
-#include <conio.h>
+#include <conio.h> // getch
 
 namespace _cns
 {
@@ -175,12 +175,12 @@ int GetAction(int& cid,int MinVal,int MaxVal,int EscapeVal)
     {
     case KEY::UP:
         {
-            cid=std::max(std::min(cid-1,MaxVal),MinVal);
+            cid=max(min(cid-1,MaxVal),MinVal);
             return 0;
         }
     case KEY::DOWN:
         {
-            cid=std::max(std::min(cid+1,MaxVal),MinVal);
+            cid=max(min(cid+1,MaxVal),MinVal);
             return 0;
         }
     case KEY::ESC:
@@ -203,6 +203,11 @@ int GetAction(int& cid,int MinVal,int MaxVal,int EscapeVal)
     default:
         return 0;
     }
+}
+
+static void ClearInputBuffer()
+{
+	scanf("%*[^\n]%*c");
 }
 
 }/// End of namespace _cns

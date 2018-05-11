@@ -1,4 +1,5 @@
 #include "ConsoleUI/ColorUI.h"
+#include <cstdio>
 using namespace std;
 
 class ReturnButton : public ColorSelection
@@ -88,11 +89,12 @@ public:
         while(scanf("%d%*c",&input)!=1)
         {
             printf("Invalid Input.\n");
+			scanf("%*[^\n]%*c");
         }
         printf("Well Done! You inputed: %d\n",input);
         printf("You may have understand it. Now Press ENTER To Continue.\n");
         char buff[1024];
-        gets(buff);
+		fgets(buff, 1024, stdin);
     }
 };
 
